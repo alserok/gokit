@@ -22,9 +22,8 @@ func newFastestResponseTime[T comparable](defaultType T, customizers ...Customiz
 type fastestResponseTime[T comparable] struct {
 	defaultType T
 
-	q          chan T
-	values     map[T]struct{}
-	currentLen int64
+	q      chan T
+	values map[T]struct{}
 
 	mu sync.RWMutex
 }
