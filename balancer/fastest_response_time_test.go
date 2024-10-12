@@ -14,7 +14,6 @@ type FastestResponseTimeSuite struct {
 	suite.Suite
 }
 
-// Each value should be iterated 'cycles' times
 func (r *FastestResponseTimeSuite) TestDefault() {
 	cycles := 2
 	testValues := []string{"a", "b", "c", "d"}
@@ -33,6 +32,32 @@ func (r *FastestResponseTimeSuite) TestDefault() {
 			r.Require().Equal(testValues[j], b.Pick(), fmt.Sprintf("cycle: %d idx: %d", i, j))
 			updates <- testValues[j]
 		}
+	}
+}
+
+func (r *FastestResponseTimeSuite) TestRemove() {
+	testValues := []string{"a", "b", "c", "d"}
+
+	updates := make(chan string, len(testValues))
+	b := newFastestResponseTime("", WithUpdater(updates))
+
+	for _, v := range testValues {
+		b.Add(v)
+	}
+
+	// if value is already added it will be listed at least 1 time
+	for i := range b.Amount() {
+		r.Require().Equal(testValues[i], b.Pick())
+		if i != 0 {
+			updates <- testValues[i]
+		}
+	}
+
+	b.Remove(testValues[0])
+	r.Require().Equal(len(testValues)-1, b.Amount())
+
+	for i := range b.Amount() {
+		r.Require().Equal(testValues[i+1], b.Pick())
 	}
 }
 
