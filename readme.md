@@ -79,7 +79,31 @@ func main() {
 
 ### Circuit breaker
 
+Prevents clients from calling services which are not available
+
 ---
 
-### HTTP
-### GRPC
+```text
+() => () ✅
+() => () ❌ (service is not answering bcs of internal errors, change breaker status to closed)
+() => () ⛔⏳ (cancel incoming requests, wait for timeout to end and switch to open-closed)
+() => () ❌ (again service is not answering bcs of internal errors, change breaker status to closed)
+() => () ⛔⏳ (cancel incoming requests, wait for timeout to end and switch to open-closed)
+() => () ✅ (service is available, switch to open)
+```
+
+```go
+package main
+
+import (
+	"github.com/alserok/gokit/breaker"
+	"time"
+)
+
+func main() {
+        timeout := time.Second
+	failToClose := 100
+	
+	b := breaker.New(timeout,failToClose)
+}
+```
