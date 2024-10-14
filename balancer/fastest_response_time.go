@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func newFastestResponseTime[T comparable](defaultType T, customizers ...Customizer) *fastestResponseTime[T] {
+func newFastestResponse[T comparable](defaultType T, customizers ...Customizer) *fastestResponseTime[T] {
 	frr := &fastestResponseTime[T]{
 		defaultType: defaultType,
 		values:      make(map[T]struct{}),
@@ -29,7 +29,7 @@ type fastestResponseTime[T comparable] struct {
 }
 
 func (f *fastestResponseTime[T]) Type() uint {
-	return FastestResponseTime
+	return FastestResponse
 }
 
 func (f *fastestResponseTime[T]) Add(values ...T) {

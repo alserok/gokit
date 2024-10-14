@@ -55,3 +55,31 @@ func main() {
 	b := balancer.New(balancer.StickyRoundRobin, defaultType, balancer.WithStick(3))
 }
 ```
+
+### Fastest response
+
+Uses a queue implemented by channel
+
+```text
+<- () <- () <- () <-
+```
+
+```go
+package main
+
+import "github.com/alserok/gokit/balancer"
+
+func main() {
+	defaultType := ""
+	updates := make(chan string, 10) // should be the same length as the number of values added, so as not to block
+	
+	b := balancer.New(balancer.FastestResponse, defaultType, balancer.WithUpdater(updates))
+}
+```
+
+### Circuit breaker
+
+---
+
+### HTTP
+### GRPC

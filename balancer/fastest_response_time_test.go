@@ -6,20 +6,20 @@ import (
 	"testing"
 )
 
-func TestFastestResponseTimeSuite(t *testing.T) {
-	suite.Run(t, new(FastestResponseTimeSuite))
+func TestFastestResponseSuite(t *testing.T) {
+	suite.Run(t, new(FastestResponseSuite))
 }
 
-type FastestResponseTimeSuite struct {
+type FastestResponseSuite struct {
 	suite.Suite
 }
 
-func (r *FastestResponseTimeSuite) TestDefault() {
+func (r *FastestResponseSuite) TestDefault() {
 	cycles := 2
 	testValues := []string{"a", "b", "c", "d"}
 
 	updates := make(chan string, len(testValues))
-	b := newFastestResponseTime("", WithUpdater(updates))
+	b := newFastestResponse("", WithUpdater(updates))
 
 	for _, v := range testValues {
 		b.Add(v)
@@ -35,11 +35,11 @@ func (r *FastestResponseTimeSuite) TestDefault() {
 	}
 }
 
-func (r *FastestResponseTimeSuite) TestRemove() {
+func (r *FastestResponseSuite) TestRemove() {
 	testValues := []string{"a", "b", "c", "d"}
 
 	updates := make(chan string, len(testValues))
-	b := newFastestResponseTime("", WithUpdater(updates))
+	b := newFastestResponse("", WithUpdater(updates))
 
 	for _, v := range testValues {
 		b.Add(v)
@@ -61,10 +61,10 @@ func (r *FastestResponseTimeSuite) TestRemove() {
 	}
 }
 
-func (r *FastestResponseTimeSuite) TestEmpty() {
+func (r *FastestResponseSuite) TestEmpty() {
 	cycles := 1
 	defaultType := ""
-	b := newFastestResponseTime(defaultType)
+	b := newFastestResponse(defaultType)
 
 	r.Require().Equal(0, b.Amount())
 

@@ -18,7 +18,7 @@ type Balancer[T comparable] interface {
 const (
 	RoundRobin = iota
 	StickyRoundRobin
-	FastestResponseTime
+	FastestResponse
 )
 
 func New[T comparable](t uint, defaultType T, customizer ...Customizer) Balancer[T] {
@@ -27,8 +27,8 @@ func New[T comparable](t uint, defaultType T, customizer ...Customizer) Balancer
 		return newRoundRobin(defaultType, customizer...)
 	case StickyRoundRobin:
 		return newStickyRoundRobin(defaultType, customizer...)
-	case FastestResponseTime:
-		return newFastestResponseTime(defaultType, customizer...)
+	case FastestResponse:
+		return newFastestResponse(defaultType, customizer...)
 
 	default:
 		panic("invalid balancer type")
