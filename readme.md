@@ -7,7 +7,7 @@
 
 ## Kit for microservices written in Go
 
-### Load balancer
+## Load balancer
 
 ---
 
@@ -77,7 +77,9 @@ func main() {
 }
 ```
 
-### Circuit breaker
+---
+
+## Circuit breaker
 
 Prevents clients from calling services which are not available
 
@@ -105,5 +107,29 @@ func main() {
 	failToClose := 100
 	
 	b := breaker.New(timeout,failToClose)
+}
+```
+
+---
+
+## Rate limiter 
+
+---
+
+Prevents services from being failed because of too many requests
+
+```go
+package main
+
+import (
+	"github.com/alserok/gokit/limiter"
+	"time"
+)
+
+func main() {
+	tick := time.Second
+	cap := 100
+	
+	l := limiter.New(limiter.WithCapacity(cap), limiter.WithTick(tick))
 }
 ```
