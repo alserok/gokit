@@ -17,7 +17,7 @@ func New[T any](cacheType uint, lim uint64) Cache[T] {
 	case LFU:
 		return nil
 	case LRU:
-		return newLRU[T](int64(lim))
+		return newLRU[T](int(lim))
 	default:
 		panic("invalid cache type")
 	}

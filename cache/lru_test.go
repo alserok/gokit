@@ -21,7 +21,7 @@ func (s *lruSuite) TestDefault() {
 	}
 	lim := 5
 
-	cache := newLRU[testStruct](int64(lim))
+	cache := newLRU[testStruct](lim)
 
 	for i := range lim {
 		cache.Set(context.Background(), fmt.Sprintf("key %d", i), testStruct{value: "a"})

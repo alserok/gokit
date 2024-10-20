@@ -3,10 +3,9 @@ package cache
 import (
 	"context"
 	"sync"
-	"sync/atomic"
 )
 
-func newLRU[T any](lim int64) *lru[T] {
+func newLRU[T any](lim int) *lru[T] {
 	return &lru[T]{
 		lim:    lim,
 		values: make(map[string]*node[T]),
@@ -17,8 +16,7 @@ type lru[T any] struct {
 	head *node[T]
 	tail *node[T]
 
-	lim  int64
-	curr int64
+	lim int
 
 	values map[string]*node[T]
 
@@ -41,15 +39,13 @@ func (l *lru[T]) Set(ctx context.Context, key string, val T) {
 		l.head.prev = n
 	}
 
-	if atomic.LoadInt64(&l.curr) >= l.lim {
+	if len(l.values) >= l.lim {
 		delete(l.values, l.tail.key)
 		l.tail = l.tail.prev
-		atomic.AddInt64(&l.curr, -1)
 	}
 
 	l.head = n
 	l.values[key] = n
-	atomic.AddInt64(&l.curr, 1)
 }
 
 func (l *lru[T]) Get(ctx context.Context, key string) *T {
