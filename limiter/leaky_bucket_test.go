@@ -17,18 +17,19 @@ type LeakyBucketSuite struct {
 
 func (s *LeakyBucketSuite) TestDefault() {
 	capacity := uint(5)
-	tick := time.Millisecond * 50
+	tick := time.Millisecond * 100
 	lim := newLeakyBucket(WithTick(tick), WithCapacity(capacity))
 
 	for range capacity {
 		s.Require().True(lim.Allow(context.Background()))
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), tick)
+	ctx, cancel := context.WithTimeout(context.Background(), tick/2)
 	defer cancel()
+
 	s.Require().False(lim.Allow(ctx))
 
-	time.Sleep(tick)
+	time.Sleep(tick + time.Millisecond*30)
 
 	s.Require().True(lim.Allow(context.Background()))
 }
