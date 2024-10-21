@@ -118,6 +118,10 @@ func main() {
 
 Prevents services from being failed because of too many requests
 
+### Leaky bucket
+
+Initially, limiter has cap tickets, and after every tick 1 ticket is being added.
+
 ```go
 package main
 
@@ -130,6 +134,50 @@ func main() {
 	tick := time.Second
 	cap := 100
 	
-	l := limiter.New(limiter.WithCapacity(cap), limiter.WithTick(tick))
+	l := limiter.New(limiter.LeakyBucket, limiter.WithCapacity(cap), limiter.WithTick(tick))
+}
+```
+
+### Fixed window
+
+Cap - maximum number of requests that may pass per 'tick' unit of time. After 'tick' counter rests to 0.
+
+```go
+package main
+
+import (
+	"github.com/alserok/gokit/limiter"
+	"time"
+)
+
+func main() {
+	tick := time.Second
+	cap := 100
+	
+	l := limiter.New(limiter.FixedWindowCounter, limiter.WithCapacity(cap), limiter.WithTick(tick))
+}
+```
+
+---
+
+## Cache
+
+---
+
+### LRU 
+
+Extincts least recently used value
+
+```go
+package main
+
+import (
+	"github.com/alserok/gokit/cache"
+)
+
+func main() {
+	lim := uint64(10)
+	
+	c := cache.New(cache.LRU, lim)
 }
 ```
