@@ -29,22 +29,22 @@ type Customizer func(limiter any)
 
 func WithCapacity(cap uint) Customizer {
 	return func(limiter any) {
-		switch limiter.(type) {
+		switch l := limiter.(type) {
 		case *leakyBucket:
-			limiter.(*leakyBucket).cap = cap
+			l.cap = cap
 		case *fixedWindowCounter:
-			limiter.(*fixedWindowCounter).lim = int64(cap)
+			l.lim = int64(cap)
 		}
 	}
 }
 
 func WithTick(tick time.Duration) Customizer {
 	return func(limiter any) {
-		switch limiter.(type) {
+		switch l := limiter.(type) {
 		case *leakyBucket:
-			limiter.(*leakyBucket).tick = tick
+			l.tick = tick
 		case *fixedWindowCounter:
-			limiter.(*fixedWindowCounter).period = tick
+			l.period = tick
 		}
 	}
 }
