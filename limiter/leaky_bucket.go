@@ -56,15 +56,3 @@ func (l *leakyBucket) Allow(ctx context.Context) bool {
 		return true
 	}
 }
-
-func WithCapacity(cap uint) Customizer {
-	return func(limiter any) {
-		limiter.(*leakyBucket).cap = cap
-	}
-}
-
-func WithTick(tick time.Duration) Customizer {
-	return func(limiter any) {
-		limiter.(*leakyBucket).tick = tick
-	}
-}
