@@ -4,6 +4,7 @@
 * Load balancer
 * Rate limiter
 * Circuit breaker
+* Cache
 
 ## Kit for microservices written in Go
 
