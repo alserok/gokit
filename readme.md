@@ -166,7 +166,7 @@ func main() {
 
 ### LRU 
 
-Extincts least recently used value
+Extincts least recently used value, uses linked list
 
 ```go
 package main
@@ -180,4 +180,54 @@ func main() {
 	
 	c := cache.New(cache.LRU, lim)
 }
+```
+
+#### Benchmarks
+
+Get
+```text
+cpu: Intel(R) Core(TM) i5-10400F CPU @ 2.90GHz
+BenchmarkLRUGet
+BenchmarkLRUGet-12      57143128                20.62 ns/op
+```
+
+Set
+```text
+cpu: Intel(R) Core(TM) i5-10400F CPU @ 2.90GHz
+BenchmarkLRUSet
+BenchmarkLRUSet-12      25298149                46.60 ns/op
+```
+
+### LFU
+
+Extincts least frequently used value, uses min heap
+
+```go
+package main
+
+import (
+	"github.com/alserok/gokit/cache"
+)
+
+func main() {
+	lim := uint64(10)
+	
+	c := cache.New(cache.LFU, lim)
+}
+```
+
+#### Benchmarks
+
+Get
+```text
+cpu: Intel(R) Core(TM) i5-10400F CPU @ 2.90GHz
+BenchmarkLFUGet
+BenchmarkLFUGet-12      80156571                14.72 ns/op
+```
+
+Set
+```text
+cpu: Intel(R) Core(TM) i5-10400F CPU @ 2.90GHz
+BenchmarkLFUSet
+BenchmarkLFUSet-12      28314708                40.92 ns/op
 ```

@@ -15,7 +15,7 @@ const (
 func New[T any](cacheType uint, lim uint64) Cache[T] {
 	switch cacheType {
 	case LFU:
-		return nil
+		return newLFU[T](int(lim))
 	case LRU:
 		return newLRU[T](int(lim))
 	default:

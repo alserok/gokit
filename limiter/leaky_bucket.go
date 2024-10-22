@@ -21,7 +21,7 @@ func newLeakyBucket(customizers ...Customizer) *leakyBucket {
 	}
 
 	lb.tickets = make(chan struct{}, lb.cap)
-	for range lb.cap {
+	for i := 0; i < int(lb.cap); i++ {
 		lb.tickets <- struct{}{}
 	}
 

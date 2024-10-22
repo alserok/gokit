@@ -8,44 +8,53 @@ import (
 func newLRU[T any](lim int) *lru[T] {
 	return &lru[T]{
 		lim:    lim,
-		values: make(map[string]*node[T]),
+		values: make(map[string]*nodeLRU[T]),
 	}
 }
 
 type lru[T any] struct {
-	head *node[T]
-	tail *node[T]
+	head *nodeLRU[T]
+	tail *nodeLRU[T]
 
 	lim int
 
-	values map[string]*node[T]
+	values map[string]*nodeLRU[T]
 
 	mu sync.RWMutex
 }
 
 func (l *lru[T]) Set(ctx context.Context, key string, val T) {
-	n := &node[T]{
-		key:  key,
-		val:  val,
-		next: l.head,
+	l.mu.RLock()
+	_, ok := l.values[key]
+	l.mu.RUnlock()
+
+	if ok {
+		return
+	}
+
+	n := &nodeLRU[T]{
+		key: key,
+		val: val,
 	}
 
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
 	if l.head == nil {
+		l.head = n
 		l.tail = n
 	} else {
+		n.next = l.head
 		l.head.prev = n
+		l.head = n
 	}
 
-	if len(l.values) >= l.lim {
+	l.values[key] = n
+
+	if len(l.values) > l.lim {
 		delete(l.values, l.tail.key)
 		l.tail = l.tail.prev
 	}
-
-	l.head = n
-	l.values[key] = n
 }
 
 func (l *lru[T]) Get(ctx context.Context, key string) *T {
@@ -60,29 +69,34 @@ func (l *lru[T]) Get(ctx context.Context, key string) *T {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
-	if val.prev == nil {
+	if val == l.head {
 		return &val.val
 	}
 
-	val.prev.next = val.next
-
-	if val.next == nil {
-		val.prev.next = nil
+	if val == l.tail {
 		l.tail = val.prev
+		l.tail.next = nil
 	} else {
-		val.next.prev = val.prev
+		if val.prev != nil {
+			val.prev.next = val.next
+		}
+		if val.next != nil {
+			val.next.prev = val.prev
+		}
 	}
 
-	val.next, l.head.prev = l.head, val
+	val.next = l.head
+	l.head.prev = val
+	val.prev = nil
 	l.head = val
 
 	return &val.val
 }
 
-type node[T any] struct {
+type nodeLRU[T any] struct {
 	val T
 	key string
 
-	next *node[T]
-	prev *node[T]
+	next *nodeLRU[T]
+	prev *nodeLRU[T]
 }
