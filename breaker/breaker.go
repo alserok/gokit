@@ -6,26 +6,30 @@ import (
 )
 
 func newBreaker(timeout time.Duration, failToClose int64) *breaker {
-	return &breaker{timeout: timeout, failToClose: failToClose, status: open}
+	return &breaker{timeout: timeout, failToClose: failToClose, status: open, closeTime: time.Now().UnixNano()}
 }
 
 type breaker struct {
 	status int64
 
 	timeout   time.Duration
-	closeTime time.Time
+	closeTime int64
 
 	failToClose int64
 	failed      int64
 }
 
 func (b *breaker) Execute(fn func() bool) bool {
-	if atomic.LoadInt64(&b.status) == closed {
-		if time.Since(b.closeTime) >= b.timeout {
+	if time.Now().UnixNano()-atomic.LoadInt64(&b.closeTime) >= b.timeout.Nanoseconds() {
+		if atomic.LoadInt64(&b.status) == closed {
 			atomic.StoreInt64(&b.status, openClosed)
 		} else {
-			return false
+			atomic.StoreInt64(&b.failed, 0)
 		}
+	}
+
+	if atomic.LoadInt64(&b.status) == closed {
+		return false
 	}
 
 	isServerError := fn()
@@ -33,13 +37,13 @@ func (b *breaker) Execute(fn func() bool) bool {
 	if isServerError {
 		if atomic.LoadInt64(&b.status) == openClosed {
 			atomic.StoreInt64(&b.status, closed)
-			b.closeTime = time.Now()
+			atomic.StoreInt64(&b.closeTime, time.Now().UnixNano())
 		} else {
 			atomic.AddInt64(&b.failed, 1)
 			if atomic.LoadInt64(&b.failed) == b.failToClose {
 				atomic.StoreInt64(&b.status, closed)
 				atomic.StoreInt64(&b.failed, 0)
-				b.closeTime = time.Now()
+				atomic.StoreInt64(&b.closeTime, time.Now().UnixNano())
 			}
 		}
 	} else {

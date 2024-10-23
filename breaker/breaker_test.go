@@ -16,7 +16,8 @@ type BreakerSuite struct {
 
 func (s *BreakerSuite) TestDefault() {
 	failToClose := 3
-	b := newBreaker(time.Millisecond*10, int64(failToClose))
+	resetPeriod := time.Millisecond * 10 * time.Duration(failToClose)
+	b := newBreaker(resetPeriod, int64(failToClose))
 
 	fn := func() bool {
 		return false // No error
@@ -38,13 +39,13 @@ func (s *BreakerSuite) TestDefault() {
 	s.Require().False(b.Execute(fn))
 	s.Require().Equal(closed, int(b.status))
 
-	time.Sleep(time.Millisecond * 20)
+	time.Sleep(resetPeriod)
 
 	// check if openClosed => closed
 	s.Require().True(b.Execute(errFn))
 	s.Require().Equal(closed, int(b.status))
 
-	time.Sleep(time.Millisecond * 20)
+	time.Sleep(resetPeriod)
 
 	// check if openClosed = > open
 	s.Require().True(b.Execute(fn))
