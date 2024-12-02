@@ -258,7 +258,7 @@ func main() {
 		return nil
 	}
 
-	workers := runtime.NumCPU()
+	workers := 3
 	// init worker pool with 3 workers
 	p := worker_pool.NewWorkerPool(fn, int64(workers))
 	// or p.Shutdown() to stop immediately
@@ -267,7 +267,7 @@ func main() {
 	// launch goroutines(workers)
 	p.Start()
 	
-	// added data for worker fn, returns true if successfully
+	// adds data for worker fn, returns true if successfully
 	p.Add(context.Background(), &counter)
 }
 ```
