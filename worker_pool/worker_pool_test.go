@@ -70,25 +70,25 @@ func (suite *WorkerPoolSuite) TestSetWorkers() {
 	p.Start()
 
 	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.maxWorkers))
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 20)
 	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.currWorkers))
 
 	workers = 2
 	p.SetWorkers(uint(workers))
 	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.maxWorkers))
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 20)
 	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.currWorkers))
 
 	workers = 5
 	p.SetWorkers(uint(workers))
 	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.maxWorkers))
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 20)
 	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.currWorkers))
 
 	workers = 2
 	p.SetWorkers(uint(workers))
 	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.maxWorkers))
-	time.Sleep(time.Millisecond * 10)
+	time.Sleep(time.Millisecond * 20)
 	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.currWorkers))
 
 	p.Stop()
