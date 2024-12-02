@@ -278,7 +278,7 @@ func main() {
 ```text
 cpu: Intel(R) Core(TM) i5-10400F CPU @ 2.90GHz
 BenchmarkNewWorkerPoolWith100Workers
-BenchmarkNewWorkerPoolWith100Workers-12    	13377774	       194.2 ns/op
+BenchmarkNewWorkerPoolWith100Workers-12    	 6091652	       197.2 ns/op
 ```
 
 10 workers

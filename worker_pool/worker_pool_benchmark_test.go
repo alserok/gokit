@@ -43,7 +43,7 @@ func BenchmarkNewWorkerPoolWithNumCPUWorkers(b *testing.B) {
 	p := newWorkerPool(func(_ any) error { return nil }, int64(runtime.NumCPU()))
 	p.Start()
 	defer p.Shutdown()
-
+	
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		p.Add(context.Background(), nil)
