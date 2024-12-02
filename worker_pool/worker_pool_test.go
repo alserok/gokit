@@ -51,12 +51,12 @@ func (suite *WorkerPoolSuite) TestDefaultCounter() {
 	go p.Start()
 
 	for range workers {
-		p.Add(context.Background(), &counter)
+		suite.Require().True(p.Add(context.Background(), &counter))
 	}
 
-	time.Sleep(time.Millisecond * 50)
+	time.Sleep(time.Microsecond * 100)
 
-	suite.Require().Equal(p.currWorkers, int64(workers))
+	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.currWorkers))
 	suite.Require().Equal(counter, workers)
 
 	p.Stop()
@@ -76,25 +76,25 @@ func (suite *WorkerPoolSuite) TestSetWorkers() {
 	go p.Start()
 
 	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.maxWorkers))
-	time.Sleep(time.Millisecond * 5)
+	time.Sleep(time.Millisecond * 10)
 	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.currWorkers))
 
 	workers = 2
 	p.SetWorkers(uint(workers))
 	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.maxWorkers))
-	time.Sleep(time.Millisecond * 5)
+	time.Sleep(time.Millisecond * 10)
 	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.currWorkers))
 
 	workers = 5
 	p.SetWorkers(uint(workers))
 	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.maxWorkers))
-	time.Sleep(time.Millisecond * 5)
+	time.Sleep(time.Millisecond * 10)
 	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.currWorkers))
 
 	workers = 2
 	p.SetWorkers(uint(workers))
 	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.maxWorkers))
-	time.Sleep(time.Millisecond * 5)
+	time.Sleep(time.Millisecond * 10)
 	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.currWorkers))
 
 	p.Stop()
@@ -109,11 +109,11 @@ func (suite *WorkerPoolSuite) TestError() {
 
 	go p.Start()
 
-	p.Add(context.Background(), nil)
+	suite.Require().True(p.Add(context.Background(), nil))
 	suite.Require().NotNil(<-p.errors)
-	p.Add(context.Background(), nil)
+	suite.Require().True(p.Add(context.Background(), nil))
 	suite.Require().NotNil(<-p.errors)
-	p.Add(context.Background(), nil)
+	suite.Require().True(p.Add(context.Background(), nil))
 	suite.Require().NotNil(<-p.errors)
 }
 
@@ -126,7 +126,7 @@ func (suite *WorkerPoolSuite) TestShutdown() {
 
 	go p.Start()
 
-	p.Add(context.Background(), &finished)
+	suite.Require().True(p.Add(context.Background(), &finished))
 	p.Shutdown()
 
 	suite.Require().Equal(0, int(atomic.LoadInt64(&p.currWorkers)))
@@ -142,7 +142,7 @@ func (suite *WorkerPoolSuite) TestStop() {
 
 	go p.Start()
 
-	p.Add(context.Background(), &finished)
+	suite.Require().True(p.Add(context.Background(), &finished))
 	p.Stop()
 
 	suite.Require().Equal(0, int(p.currWorkers))
