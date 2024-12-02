@@ -261,7 +261,8 @@ func main() {
 	workers := 3
 	// init worker pool with 3 workers
 	p := worker_pool.NewWorkerPool(fn, int64(workers))
-	defer p.Stop()
+	// or p.Shutdown() to stop immediately
+	defer p.Stop() // wait for workers to process all data already added
 	
 	// launch goroutines(workers)
 	go p.Start()
@@ -269,4 +270,12 @@ func main() {
 	// added data for worker fn
 	p.Add(context.Background(), &counter)
 }
+```
+
+#### Benchmarks
+
+```text
+cpu: Intel(R) Core(TM) i5-10400F CPU @ 2.90GHz
+BenchmarkNewWorkerPoolWith100Workers
+BenchmarkNewWorkerPoolWith100Workers-12    	33669372	        31.81 ns/op
 ```
