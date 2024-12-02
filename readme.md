@@ -238,27 +238,27 @@ BenchmarkLFUSet-12      28314708                40.92 ns/op
 
 ## Worker pool
 
+For time-consuming tasks recommended to use `workers=runtime.NumCPU()`, 
+for fast tasks will be more efficient to use less workers.
+
 ```go
 package main
 
 import (
 	"github.com/alserok/gokit/worker_pool"
 	"sync"
+	"sync/atomic"
+	"runtime"
 )
 
 func main() {
-	counter := 0
-	fn := func(c *int) error {
-		mu := sync.Mutex{}
-
-		mu.Lock()
-		*c += 1
-		mu.Unlock()
-
+	counter := int64(0)
+	fn := func(c *int64) error {
+		atomic.AddInt64(c, 1)
 		return nil
 	}
 
-	workers := 3 // recommended less or equal to runtime.NumCPU()
+	workers := runtime.NumCPU()
 	// init worker pool with 3 workers
 	p := worker_pool.NewWorkerPool(fn, int64(workers))
 	// or p.Shutdown() to stop immediately
@@ -274,30 +274,38 @@ func main() {
 
 #### Benchmarks
 
+Function executed by worker
+```go
+func(_ any) error {
+	time.Sleep(time.Millisecond * 30)
+	return nil
+}
+```
+
 100 workers
 ```text
 cpu: Intel(R) Core(TM) i5-10400F CPU @ 2.90GHz
 BenchmarkNewWorkerPoolWith100Workers
-BenchmarkNewWorkerPoolWith100Workers-12    	 6091652	       197.2 ns/op
+BenchmarkNewWorkerPoolWith100Workers-12    	29727832	        34.60 ns/op
 ```
 
 10 workers
 ```text
 cpu: Intel(R) Core(TM) i5-10400F CPU @ 2.90GHz
 BenchmarkNewWorkerPoolWith10Workers
-BenchmarkNewWorkerPoolWith10Workers-12    	23683752	        45.90 ns/op
+BenchmarkNewWorkerPoolWith10Workers-12    	30755013	        33.37 ns/op
 ```
 
 1 worker
 ```text
 cpu: Intel(R) Core(TM) i5-10400F CPU @ 2.90GHz
 BenchmarkNewWorkerPoolWith1Worker
-BenchmarkNewWorkerPoolWith1Worker-12    	35044533	        33.72 ns/op
+BenchmarkNewWorkerPoolWith1Worker-12    	30688845	        33.42 ns/op
 ```
 
 NumCPU(12) workers
 ```text
 cpu: Intel(R) Core(TM) i5-10400F CPU @ 2.90GHz
 BenchmarkNewWorkerPoolWithNumCPUWorkers
-BenchmarkNewWorkerPoolWithNumCPUWorkers-12    	22199098	        47.44 ns/op
+BenchmarkNewWorkerPoolWithNumCPUWorkers-12    	34146645	        33.58 ns/op
 ```

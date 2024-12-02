@@ -2,12 +2,15 @@ package worker_pool
 
 import (
 	"context"
-	"runtime"
 	"testing"
+	"time"
 )
 
 func BenchmarkNewWorkerPoolWith100Workers(b *testing.B) {
-	p := newWorkerPool(func(_ any) error { return nil }, 100)
+	p := newWorkerPool(func(_ any) error {
+		time.Sleep(time.Millisecond * 30)
+		return nil
+	}, 100)
 	p.Start()
 	defer p.Shutdown()
 
@@ -18,7 +21,10 @@ func BenchmarkNewWorkerPoolWith100Workers(b *testing.B) {
 }
 
 func BenchmarkNewWorkerPoolWith10Workers(b *testing.B) {
-	p := newWorkerPool(func(_ any) error { return nil }, 10)
+	p := newWorkerPool(func(_ any) error {
+		time.Sleep(time.Millisecond * 30)
+		return nil
+	}, 10)
 	p.Start()
 	defer p.Shutdown()
 
@@ -29,7 +35,10 @@ func BenchmarkNewWorkerPoolWith10Workers(b *testing.B) {
 }
 
 func BenchmarkNewWorkerPoolWith1Worker(b *testing.B) {
-	p := newWorkerPool(func(_ any) error { return nil }, 1)
+	p := newWorkerPool(func(_ any) error {
+		time.Sleep(time.Millisecond * 30)
+		return nil
+	}, 10)
 	p.Start()
 	defer p.Shutdown()
 
@@ -40,10 +49,13 @@ func BenchmarkNewWorkerPoolWith1Worker(b *testing.B) {
 }
 
 func BenchmarkNewWorkerPoolWithNumCPUWorkers(b *testing.B) {
-	p := newWorkerPool(func(_ any) error { return nil }, int64(runtime.NumCPU()))
+	p := newWorkerPool(func(_ any) error {
+		time.Sleep(time.Millisecond * 30)
+		return nil
+	}, 10)
 	p.Start()
 	defer p.Shutdown()
-	
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		p.Add(context.Background(), nil)

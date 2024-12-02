@@ -28,7 +28,7 @@ func (suite *WorkerPoolSuite) TestNewWorkerPool() {
 func (suite *WorkerPoolSuite) TestDefaultCounter() {
 	counter := int64(0)
 	fn := func(c *int64) error {
-		atomic.AddInt64(&counter, 1)
+		atomic.AddInt64(c, 1)
 		return nil
 	}
 
