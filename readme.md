@@ -5,6 +5,7 @@
 * Rate limiter
 * Circuit breaker
 * Cache
+* Worker Pool
 
 ## Kit for microservices written in Go
 
@@ -12,7 +13,7 @@
 
 ---
 
-#### Round Robin
+### Round Robin
 
 Default implementation of round-robin algo
 ```text
@@ -34,7 +35,7 @@ func main() {
 }
 ```
 
-#### Sticky round Robin
+### Sticky round Robin
 
 The same round-robin, but each value is being chosen n times in a row
 ```text
@@ -231,4 +232,41 @@ Set
 cpu: Intel(R) Core(TM) i5-10400F CPU @ 2.90GHz
 BenchmarkLFUSet
 BenchmarkLFUSet-12      28314708                40.92 ns/op
+```
+
+---
+
+## Worker pool
+
+```go
+package main
+
+import (
+	"github.com/alserok/gokit/worker_pool"
+	"sync"
+)
+
+func main() {
+	counter := 0
+	fn := func(c *int) error {
+		mu := sync.Mutex{}
+
+		mu.Lock()
+		*c += 1
+		mu.Unlock()
+
+		return nil
+	}
+
+	workers := 3
+	// init worker pool with 3 workers
+	p := worker_pool.NewWorkerPool(fn, int64(workers))
+	defer p.Stop()
+	
+	// launch goroutines(workers)
+	go p.Start()
+	
+	// added data for worker fn
+	p.Add(context.Background(), &counter)
+}
 ```
