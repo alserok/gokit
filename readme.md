@@ -1,11 +1,11 @@
 # Gokit
 
 ---
-* Load balancer
-* Rate limiter
-* Circuit breaker
-* Cache
-* Worker Pool
+* [Load balancer](#load-balancer)
+* [Rate limiter](#rate-limiter)
+* [Circuit breaker](#circuit-breaker)
+* [Cache](#cache)
+* [Worker Pool](#worker-pool)
 
 ## Kit for microservices written in Go
 
@@ -114,7 +114,7 @@ func main() {
 
 ---
 
-## Rate limiter 
+## Rate limiter
 
 ---
 
