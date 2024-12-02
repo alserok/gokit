@@ -258,24 +258,46 @@ func main() {
 		return nil
 	}
 
-	workers := 3
+	workers := 3 // recommended less or equal to runtime.NumCPU()
 	// init worker pool with 3 workers
 	p := worker_pool.NewWorkerPool(fn, int64(workers))
 	// or p.Shutdown() to stop immediately
 	defer p.Stop() // wait for workers to process all data already added
 	
 	// launch goroutines(workers)
-	go p.Start()
+	p.Start()
 	
-	// added data for worker fn
+	// added data for worker fn, returns true if successfully
 	p.Add(context.Background(), &counter)
 }
 ```
 
 #### Benchmarks
 
+100 workers
 ```text
 cpu: Intel(R) Core(TM) i5-10400F CPU @ 2.90GHz
 BenchmarkNewWorkerPoolWith100Workers
-BenchmarkNewWorkerPoolWith100Workers-12    	33669372	        31.81 ns/op
+BenchmarkNewWorkerPoolWith100Workers-12    	13377774	       194.2 ns/op
+```
+
+10 workers
+```text
+cpu: Intel(R) Core(TM) i5-10400F CPU @ 2.90GHz
+BenchmarkNewWorkerPoolWith10Workers
+BenchmarkNewWorkerPoolWith10Workers-12    	23683752	        45.90 ns/op
+```
+
+1 worker
+```text
+cpu: Intel(R) Core(TM) i5-10400F CPU @ 2.90GHz
+BenchmarkNewWorkerPoolWith1Worker
+BenchmarkNewWorkerPoolWith1Worker-12    	35044533	        33.72 ns/op
+```
+
+NumCPU(12) workers
+```text
+cpu: Intel(R) Core(TM) i5-10400F CPU @ 2.90GHz
+BenchmarkNewWorkerPoolWithNumCPUWorkers
+BenchmarkNewWorkerPoolWithNumCPUWorkers-12    	22199098	        47.44 ns/op
 ```

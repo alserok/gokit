@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/stretchr/testify/suite"
-	"sync"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -27,14 +26,9 @@ func (suite *WorkerPoolSuite) TestNewWorkerPool() {
 }
 
 func (suite *WorkerPoolSuite) TestDefaultCounter() {
-	counter := 0
-	fn := func(c *int) error {
-		mu := sync.Mutex{}
-
-		mu.Lock()
-		*c += 1
-		mu.Unlock()
-
+	counter := int64(0)
+	fn := func(c *int64) error {
+		atomic.AddInt64(&counter, 1)
 		return nil
 	}
 
@@ -48,7 +42,7 @@ func (suite *WorkerPoolSuite) TestDefaultCounter() {
 	suite.Require().Equal(p.maxWorkers, int64(workers))
 	suite.Require().Equal(p.currWorkers, int64(0))
 
-	go p.Start()
+	p.Start()
 
 	for range workers {
 		suite.Require().True(p.Add(context.Background(), &counter))
@@ -57,7 +51,7 @@ func (suite *WorkerPoolSuite) TestDefaultCounter() {
 	time.Sleep(time.Microsecond * 100)
 
 	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.currWorkers))
-	suite.Require().Equal(counter, workers)
+	suite.Require().Equal(workers, int(atomic.LoadInt64(&counter)))
 
 	p.Stop()
 
@@ -73,7 +67,7 @@ func (suite *WorkerPoolSuite) TestSetWorkers() {
 	p := newWorkerPool(fn, int64(workers))
 	suite.Require().NotNil(p)
 
-	go p.Start()
+	p.Start()
 
 	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.maxWorkers))
 	time.Sleep(time.Millisecond * 10)
@@ -107,7 +101,7 @@ func (suite *WorkerPoolSuite) TestError() {
 	}, 1)
 	suite.Require().NotNil(p)
 
-	go p.Start()
+	p.Start()
 
 	suite.Require().True(p.Add(context.Background(), nil))
 	suite.Require().NotNil(<-p.errors)
@@ -120,11 +114,12 @@ func (suite *WorkerPoolSuite) TestError() {
 func (suite *WorkerPoolSuite) TestShutdown() {
 	finished := false
 	p := newWorkerPool(func(b *bool) error {
+		time.Sleep(time.Millisecond * 10)
 		*b = true
 		return nil
 	}, 1)
 
-	go p.Start()
+	p.Start()
 
 	suite.Require().True(p.Add(context.Background(), &finished))
 	p.Shutdown()
@@ -136,11 +131,12 @@ func (suite *WorkerPoolSuite) TestShutdown() {
 func (suite *WorkerPoolSuite) TestStop() {
 	finished := false
 	p := newWorkerPool(func(b *bool) error {
+		time.Sleep(time.Millisecond * 10)
 		*b = true
 		return nil
 	}, 1)
 
-	go p.Start()
+	p.Start()
 
 	suite.Require().True(p.Add(context.Background(), &finished))
 	p.Stop()

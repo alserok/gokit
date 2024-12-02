@@ -62,63 +62,65 @@ func (w *workerPool[T]) SetWorkers(amount uint) {
 }
 
 func (w *workerPool[T]) Start() {
-	wg := &sync.WaitGroup{}
-	for range int(atomic.LoadInt64(&w.maxWorkers)) {
-		select {
-		case w.workers <- struct{}{}:
-		default:
-			return
-		}
-	}
-
-	for range w.workers {
-		wg.Add(1)
-		atomic.AddInt64(&w.currWorkers, 1)
-
-		go func() {
-			defer wg.Done()
-			defer atomic.AddInt64(&w.currWorkers, -1)
-
-			for {
-				select {
-				case val, ok := <-w.input:
-					if !ok {
-						return
-					}
-
-					if err := w.exec(val); err != nil {
-						select {
-						case w.errors <- err:
-						default:
-						}
-					}
-				case _, ok := <-w.workersUpdate:
-					if !ok {
-						return
-					}
-
-					if atomic.LoadInt64(&w.currWorkers) >= atomic.LoadInt64(&w.maxWorkers) {
-						w.workersUpdate <- struct{}{}
-						return
-					}
-
-					for atomic.LoadInt64(&w.currWorkers) < atomic.LoadInt64(&w.maxWorkers) {
-						w.workers <- struct{}{}
-						time.Sleep(time.Microsecond * 10)
-					}
-				case <-w.shutdownCh:
-					return
-				}
+	go func() {
+		wg := &sync.WaitGroup{}
+		for range int(atomic.LoadInt64(&w.maxWorkers)) {
+			select {
+			case w.workers <- struct{}{}:
+			default:
+				return
 			}
-		}()
-	}
+		}
 
-	wg.Wait()
+		for range w.workers {
+			wg.Add(1)
+			atomic.AddInt64(&w.currWorkers, 1)
 
-	close(w.input)
-	close(w.errors)
-	close(w.workers)
-	close(w.workersUpdate)
+			go func() {
+				defer wg.Done()
+				defer atomic.AddInt64(&w.currWorkers, -1)
+
+				for {
+					select {
+					case val, ok := <-w.input:
+						if !ok {
+							return
+						}
+
+						if err := w.exec(val); err != nil {
+							select {
+							case w.errors <- err:
+							default:
+							}
+						}
+					case _, ok := <-w.workersUpdate:
+						if !ok {
+							return
+						}
+
+						if atomic.LoadInt64(&w.currWorkers) >= atomic.LoadInt64(&w.maxWorkers) {
+							w.workersUpdate <- struct{}{}
+							return
+						}
+
+						for atomic.LoadInt64(&w.currWorkers) < atomic.LoadInt64(&w.maxWorkers) {
+							w.workers <- struct{}{}
+							time.Sleep(time.Microsecond * 10)
+						}
+					case <-w.shutdownCh:
+						return
+					}
+				}
+			}()
+		}
+
+		wg.Wait()
+
+		close(w.input)
+		close(w.errors)
+		close(w.workers)
+		close(w.workersUpdate)
+	}()
 }
 
 func (w *workerPool[T]) Add(ctx context.Context, val T) bool {
