@@ -15,6 +15,7 @@ func newWorkerPool[T any](exec Executable[T], maxWorkers int64) *workerPool[T] {
 		errors:        make(chan error, maxWorkers),
 		workers:       make(chan struct{}, maxWorkers),
 		workersUpdate: make(chan struct{}, 1),
+		shutdownCh:    make(chan struct{}),
 	}
 }
 
@@ -27,13 +28,22 @@ type workerPool[T any] struct {
 	workers     chan struct{}
 	maxWorkers  int64
 	currWorkers int64
+
+	shutdownCh chan struct{}
+}
+
+func (w *workerPool[T]) Shutdown() {
+	close(w.shutdownCh)
+
+	for atomic.LoadInt64(&w.currWorkers) != 0 {
+	}
 }
 
 func (w *workerPool[T]) Stop() {
-	close(w.input)
-	close(w.errors)
-	close(w.workers)
-	close(w.workersUpdate)
+	for len(w.input) != 0 {
+	}
+
+	close(w.shutdownCh)
 
 	for atomic.LoadInt64(&w.currWorkers) != 0 {
 	}
@@ -45,13 +55,20 @@ func (w *workerPool[T]) Errors() <-chan error {
 
 func (w *workerPool[T]) SetWorkers(amount uint) {
 	atomic.StoreInt64(&w.maxWorkers, int64(amount))
-	w.workersUpdate <- struct{}{}
+	select {
+	case w.workersUpdate <- struct{}{}:
+	default:
+	}
 }
 
 func (w *workerPool[T]) Start() {
 	wg := &sync.WaitGroup{}
 	for range int(atomic.LoadInt64(&w.maxWorkers)) {
-		w.workers <- struct{}{}
+		select {
+		case w.workers <- struct{}{}:
+		default:
+			return
+		}
 	}
 
 	for range w.workers {
@@ -75,7 +92,11 @@ func (w *workerPool[T]) Start() {
 						default:
 						}
 					}
-				case <-w.workersUpdate:
+				case _, ok := <-w.workersUpdate:
+					if !ok {
+						return
+					}
+
 					if atomic.LoadInt64(&w.currWorkers) >= atomic.LoadInt64(&w.maxWorkers) {
 						w.workersUpdate <- struct{}{}
 						return
@@ -85,12 +106,19 @@ func (w *workerPool[T]) Start() {
 						w.workers <- struct{}{}
 						time.Sleep(time.Microsecond * 10)
 					}
+				case <-w.shutdownCh:
+					return
 				}
 			}
 		}()
 	}
 
 	wg.Wait()
+
+	close(w.input)
+	close(w.errors)
+	close(w.workers)
+	close(w.workersUpdate)
 }
 
 func (w *workerPool[T]) Add(ctx context.Context, val T) bool {

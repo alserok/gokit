@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/stretchr/testify/suite"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -53,7 +54,7 @@ func (suite *WorkerPoolSuite) TestDefaultCounter() {
 		p.Add(context.Background(), &counter)
 	}
 
-	time.Sleep(time.Millisecond * 20)
+	time.Sleep(time.Millisecond * 50)
 
 	suite.Require().Equal(p.currWorkers, int64(workers))
 	suite.Require().Equal(counter, workers)
@@ -74,27 +75,27 @@ func (suite *WorkerPoolSuite) TestSetWorkers() {
 
 	go p.Start()
 
-	suite.Require().Equal(int64(workers), p.maxWorkers)
+	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.maxWorkers))
 	time.Sleep(time.Millisecond * 5)
-	suite.Require().Equal(int64(workers), p.currWorkers)
+	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.currWorkers))
 
 	workers = 2
 	p.SetWorkers(uint(workers))
-	suite.Require().Equal(int64(workers), p.maxWorkers)
+	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.maxWorkers))
 	time.Sleep(time.Millisecond * 5)
-	suite.Require().Equal(int64(workers), p.currWorkers)
+	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.currWorkers))
 
 	workers = 5
 	p.SetWorkers(uint(workers))
-	suite.Require().Equal(int64(workers), p.maxWorkers)
+	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.maxWorkers))
 	time.Sleep(time.Millisecond * 5)
-	suite.Require().Equal(int64(workers), p.currWorkers)
+	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.currWorkers))
 
 	workers = 2
 	p.SetWorkers(uint(workers))
-	suite.Require().Equal(int64(workers), p.maxWorkers)
+	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.maxWorkers))
 	time.Sleep(time.Millisecond * 5)
-	suite.Require().Equal(int64(workers), p.currWorkers)
+	suite.Require().Equal(int64(workers), atomic.LoadInt64(&p.currWorkers))
 
 	p.Stop()
 	suite.Require().Equal(p.currWorkers, int64(0))
@@ -114,4 +115,36 @@ func (suite *WorkerPoolSuite) TestError() {
 	suite.Require().NotNil(<-p.errors)
 	p.Add(context.Background(), nil)
 	suite.Require().NotNil(<-p.errors)
+}
+
+func (suite *WorkerPoolSuite) TestShutdown() {
+	finished := false
+	p := newWorkerPool(func(b *bool) error {
+		*b = true
+		return nil
+	}, 1)
+
+	go p.Start()
+
+	p.Add(context.Background(), &finished)
+	p.Shutdown()
+
+	suite.Require().Equal(0, int(atomic.LoadInt64(&p.currWorkers)))
+	suite.Require().False(finished)
+}
+
+func (suite *WorkerPoolSuite) TestStop() {
+	finished := false
+	p := newWorkerPool(func(b *bool) error {
+		*b = true
+		return nil
+	}, 1)
+
+	go p.Start()
+
+	p.Add(context.Background(), &finished)
+	p.Stop()
+
+	suite.Require().Equal(0, int(p.currWorkers))
+	suite.Require().True(finished)
 }

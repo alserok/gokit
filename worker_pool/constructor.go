@@ -10,7 +10,9 @@ type WorkerPool[T any] interface {
 
 	// Start starts workers
 	Start()
-	// Stop stops workers
+	// Shutdown immediately stops workers
+	Shutdown()
+	// Stop stops workers after they finish all data processing
 	Stop()
 
 	// SetWorkers sets max amount of workers
