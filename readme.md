@@ -318,9 +318,18 @@ BenchmarkNewWorkerPoolWithNumCPUWorkers-12    	34146645	        33.58 ns/op
 
 Mechanism that allows to repeat action on failure.
 
-### ExponentialBackoff
+### Exponential Backoff
 
 Interval between retries multiplies by `exponent`
+
+**Customizers**
+```go
+func WithAmount(amount uint) Customizer {}
+
+func WithInterval(interval time.Duration) Customizer {}
+
+func WithExponent(exp float32) Customizer {}
+```
 
 ```go
 package main
@@ -348,9 +357,16 @@ func main() {
 
 ```
 
-### FixedInterval
+### Fixed Interval
 
 Interval between retries is constant
+
+**Customizers**
+```go
+func WithAmount(amount uint) Customizer {}
+
+func WithInterval(interval time.Duration) Customizer {}
+```
 
 ```go
 package main
@@ -381,6 +397,15 @@ func main() {
 
 Interval between retries increases by `step`
 
+**Customizers**
+```go
+func WithAmount(amount uint) Customizer {}
+
+func WithInterval(interval time.Duration) Customizer {}
+
+func WithStep(step float32) Customizer {}
+```
+
 ```go
 package main
 
@@ -409,6 +434,13 @@ func main() {
 ### Successive Interval
 
 Interval between retries depends on previous amount of failures
+
+**Customizers**
+```go
+func WithAmount(amount uint) Customizer {}
+
+func WithInterval(interval time.Duration) Customizer {}
+```
 
 ```go
 package main
