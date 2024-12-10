@@ -1,11 +1,13 @@
 # Gokit
 
 ---
+
 * [Load balancer](#load-balancer)
 * [Rate limiter](#rate-limiter)
 * [Circuit breaker](#circuit-breaker)
 * [Cache](#cache)
 * [Worker Pool](#worker-pool)
+* [Retry](#retry)
 
 ## Kit for microservices written in Go
 
@@ -308,4 +310,127 @@ NumCPU(12) workers
 cpu: Intel(R) Core(TM) i5-10400F CPU @ 2.90GHz
 BenchmarkNewWorkerPoolWithNumCPUWorkers
 BenchmarkNewWorkerPoolWithNumCPUWorkers-12    	34146645	        33.58 ns/op
+```
+
+---
+
+## Retry
+
+Mechanism that allows to repeat action on failure.
+
+### ExponentialBackoff
+
+Interval between retries multiplies by `exponent`
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+	"github.com/alserok/gokit/retry"
+	"time"
+)
+
+func main() {
+	r := retry.New(retry.ExponentialBackoff, retry.WithAmount(uint(3)), retry.WithInterval(time.Millisecond*5), retry.WithExponent(1.25))
+
+	errorFn := func() error {
+		return errors.New("error")
+	}
+
+	if err := r.Execute(errorFn); err != nil {
+		panic("all retries finished with error: " + err.Error())
+	}
+
+	fmt.Println("some retry has finished without error")
+}
+
+```
+
+### FixedInterval
+
+Interval between retries is constant
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+	"github.com/alserok/gokit/retry"
+	"time"
+)
+
+func main() {
+	r := retry.New(retry.FixedInterval, retry.WithAmount(uint(3)), retry.WithInterval(time.Millisecond*5))
+
+	errorFn := func() error {
+		return errors.New("error")
+	}
+
+	if err := r.Execute(errorFn); err != nil {
+		panic("all retries finished with error: " + err.Error())
+	}
+
+	fmt.Println("some retry has finished without error")
+}
+```
+
+### Linear Backoff
+
+Interval between retries increases by `step`
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+	"github.com/alserok/gokit/retry"
+	"time"
+)
+
+func main() {
+	r := retry.New(retry.LinearBackoff, retry.WithAmount(uint(3)), retry.WithInterval(time.Millisecond*5), retry.WithStep(0.5))
+
+	errorFn := func() error {
+		return errors.New("error")
+	}
+
+	if err := r.Execute(errorFn); err != nil {
+		panic("all retries finished with error: " + err.Error())
+	}
+
+	fmt.Println("some retry has finished without error")
+}
+```
+
+### Successive Interval
+
+Interval between retries depends on previous amount of failures
+
+```go
+package main
+
+import (
+	"errors"
+	"fmt"
+	"github.com/alserok/gokit/retry"
+	"time"
+)
+
+func main() {
+	r := retry.New(retry.SuccessiveInterval, retry.WithAmount(uint(3)), retry.WithInterval(time.Millisecond*5))
+
+	errorFn := func() error {
+		return errors.New("error")
+	}
+
+	if err := r.Execute(errorFn); err != nil {
+		panic("all retries finished with error: " + err.Error())
+	}
+
+	fmt.Println("some retry has finished without error")
+}
 ```
