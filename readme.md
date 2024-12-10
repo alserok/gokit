@@ -318,6 +318,8 @@ BenchmarkNewWorkerPoolWithNumCPUWorkers-12    	34146645	        33.58 ns/op
 
 Mechanism that allows to repeat action on failure.
 
+If you omit customizers, will be set default values. 
+
 ### Exponential Backoff
 
 Interval between retries multiplies by `exponent`
