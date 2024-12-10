@@ -89,9 +89,3 @@ func (f *fastestResponseTime[T]) All() []T {
 
 	return res
 }
-
-func WithUpdater[T comparable](ch chan T) Customizer {
-	return func(balancer any) {
-		balancer.(*fastestResponseTime[T]).q = ch
-	}
-}

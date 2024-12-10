@@ -79,9 +79,3 @@ func (b *stickyRoundRobin[T]) Amount() int {
 func (b *stickyRoundRobin[T]) All() []T {
 	return b.values
 }
-
-func WithStick[T comparable](amount int64) Customizer {
-	return func(balancer any) {
-		balancer.(*stickyRoundRobin[T]).stick = amount
-	}
-}
